@@ -42,7 +42,7 @@ int analog_last_value = 0;
 // Neo pixel
 
 #define PIN 21
-#define NUMPIXELS 50
+#define NUMPIXELS 80
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 // color dictionary
@@ -320,5 +320,6 @@ void line_state_callback(bool connected) {
   initAllLedsPixels();
   if (connected) {
     usb_web.println("MConnected!");
+    usb_web.flush();
   }
 }
