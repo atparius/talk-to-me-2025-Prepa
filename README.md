@@ -11,20 +11,9 @@ https://ecal-mid.ch/talktome/
 Pour commencer :
 
  
-- Si vous souhaitez créer votre propre version : **Fork** le repository
-- Si vous souhaitez simplement utiliser le projet : **Clone** le repository
+- Si vous souhaitez créer votre propre version : **Fork** le répertoire
 
-Ce repository utilise des sous-modules Git. Pour le clonage :
-
-- Avec GitHub Desktop : Les sous-modules sont initialisés automatiquement! Rien à faire.
-- En ligne de commande : Exécuter `git submodule update --init --recursive` après le clonage
-
-Pour mettre à jour le sous-module vers sa dernière version :
-```bash
-git submodule update --remote
-```
-
-Note: Si vous avez forké ce repository, vous recevrez toujours les mises à jour du sous-module `talk-to-me-core` depuis le repository original.
+Note: Si vous avez forké ce répertoire, vous recevrez toujours les mises à jour du sous-module `talk-to-me-core` depuis le répertoire original.
 
 ## Exemples de code
 
