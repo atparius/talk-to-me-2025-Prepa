@@ -7,6 +7,11 @@ export default class WebUsbManager {
     this.statusDisplay = statusDisplay;
     this.init();
     this.initSerial();
+    this.updateStatus('Disconnected');
+  }
+
+  setLogger(logger) {
+    this.fancyLogger = logger;
   }
 
   init() {
@@ -42,10 +47,9 @@ export default class WebUsbManager {
 
     this.serial.getPorts().then((ports) => {
       if (ports.length === 0) {
-        this.statusDisplay.textContent =
-          'No device found. Plug your device and press Connect';
+        this.updateStatus('No device found. Plug your device and press Connect');
       } else {
-        this.statusDisplay.textContent = 'Connecting...';
+        this.updateStatus('Connecting...');
         this.port = ports[0];
         this.connect();
       }
@@ -126,12 +130,7 @@ export default class WebUsbManager {
 
   handleConnect() {
     if (this.port) {
-      this.port.disconnect();
-      this.connectButton.textContent = 'Connect';
-      this.statusDisplay.textContent = '';
-      this.port = null;
-      document.body.style.backgroundColor = 'lightgray';
-      serial.is_connected = 0;
+      this.disconnect();
     } else {
       this.serial
         .requestPort()
@@ -140,7 +139,7 @@ export default class WebUsbManager {
           this.connect();
         })
         .catch((error) => {
-          this.statusDisplay.textContent = error;
+          this.updateStatus('Error: ' + error);
         });
     }
   }
@@ -158,10 +157,19 @@ export default class WebUsbManager {
   connect() {
     this.port.connect().then(
       () => {
-        this.statusDisplay.textContent = '';
+        this.updateStatus('Connected');
         this.connectButton.textContent = 'Disconnect';
         document.body.style.backgroundColor = 'lightgreen';
         this.serial.is_connected = 1;
+        
+        // Clear console if logger is available
+        if (this.fancyLogger) {
+          this.fancyLogger.clearConsole();
+        }
+        
+        // Turn off all LEDs when connected
+        this.parent.ledsAllOff();
+        
         this.port.onReceive = (data) => {
           let textDecoder = new TextDecoder();
           if (data.getInt8() === 13) {
@@ -176,14 +184,44 @@ export default class WebUsbManager {
           this.port.disconnect();
           this.serial.is_connected = 0;
           this.connectButton.textContent = 'Connect';
-          this.statusDisplay.textContent = error;
+          this.updateStatus('Disconnected');
           this.port = null;
           document.body.style.backgroundColor = 'lightgray';
         };
       },
       (error) => {
-        this.statusDisplay.textContent = error;
+        this.updateStatus('Error: ' + error);
       }
     );
+  }
+
+  disconnect() {
+    if (this.port) {
+      this.port.disconnect();
+      this.connectButton.textContent = 'Connect';
+      this.updateStatus('Disconnected');
+      this.port = null;
+      document.body.style.backgroundColor = 'lightgray';
+      this.serial.is_connected = 0;
+    } else {
+      this.serial
+        .requestPort()
+        .then((port) => {
+          this.port = port;
+          this.connect();
+        })
+        .catch((error) => {
+          this.updateStatus('Error: ' + error);
+        });
+    }
+  }
+
+  updateStatus(_msg) {
+    this.statusDisplay.textContent = _msg;
+    if (_msg === 'Connected') {
+      this.statusDisplay.className = 'status-text connected';
+    } else {
+      this.statusDisplay.className = 'status-text disconnected';
+    }
   }
 }

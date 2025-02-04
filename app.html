@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Talk To Me - Controller</title>
-    <!-- Base scripts-->
+    <meta charset="UTF-8" />
+    <title>Talk to me</title>
+    <script src="js/utils/Polyfill.js"></script>
+    <script src="js/core/UIManager.js"></script>
+    <script src="js/core/TalkMachine.js"></script>
     <script type="module" src="js/DialogMachine.js"></script>
     <!-- Your script-->
 
@@ -11,50 +14,132 @@
   <body>
     <div class="main-content">
       <h1>Talk To Me - Controller</h1>
-      <div class="connect-container">
-        <div class="container-title">Pi Pico Board</div>
-        <button id="connect" class="button black">Connect</button>
-        <span id="status"></span>
+      <div id="version">version: 0.0.0</div>
+      <div class="containers-wrapper">
+        <div class="column">
+          <div class="connect-container">
+            <div class="container-title">Pi Pico Board</div>
+            <div class="connection-controls">
+              <button id="connect" class="button black">Connect</button>
+              <span id="status" class="status-text disconnected"
+                >Disconnected</span
+              >
+            </div>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">Your Program</div>
+            <button id="restartbutton" class="button black">
+              Start Dialog-Machine
+            </button>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">Buttons Simulation</div>
+            <button id="btn0" class="testbutton blue">0</button>
+            <button id="btn1" class="testbutton yellow">1</button>
+            <button id="btn2" class="testbutton white">2</button>
+            <button id="btn3" class="testbutton white">3</button>
+            <button id="btn4" class="testbutton white">4</button>
+            <button id="btn5" class="testbutton white">5</button>
+            <button id="btn6" class="testbutton white">6</button>
+            <button id="btn7" class="testbutton white">7</button>
+            <button id="btn8" class="testbutton white">8</button>
+            <button id="btn9" class="testbutton white">9</button>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">LED Simulation</div>
+            <div id="led-container" class="led-container">
+              <div id="led0" class="led"></div>
+              <div id="led1" class="led"></div>
+              <div id="led2" class="led"></div>
+              <div id="led3" class="led"></div>
+              <div id="led4" class="led"></div>
+              <div id="led5" class="led"></div>
+              <div id="led6" class="led"></div>
+              <div id="led7" class="led"></div>
+              <div id="led8" class="led"></div>
+              <div id="led9" class="led"></div>
+            </div>
+            <div class="led-controls">
+              <button id="allLedsOff" class="button black">All LEDs Off</button>
+              <button id="allLedsTest" class="button black">
+                Test all LEDs red
+              </button>
+            </div>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">Test Buttons</div>
+            <button id="tester_btn_1" class="button tester black">
+              1. All leds > off
+            </button>
+            <button id="tester_btn_2" class="button tester black">
+              2. All leds > yellow
+            </button>
+            <button id="tester_btn_3" class="button tester black">
+              3. All leds > green blinking
+            </button>
+            <button id="tester_btn_4" class="button tester black">
+              4. All leds > pink pulsing
+            </button>
+            <button id="tester_btn_5" class="button tester black">
+              5. Some leds > custom RGB
+            </button>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">Voice Simulation</div>
+            <div class="voice-container">
+              <label for="texttospeak">List all available voices</label>
+              <input type="checkbox" id="allvoices" />
+              <select id="voiceSelect"></select
+              ><br />
+              <textarea id="texttospeak" cols="60">
+Talk to me, tell me what you want.</textarea
+              ><br />
+
+              <label for="pitch">Pitch (0-2)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="2"
+                value="1"
+                id="pitch"
+              /><br />
+              <label for="rate">Rate (0.1-10)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="10"
+                value="0.8"
+                id="rate"
+              />
+              <br /><button id="speakit" class="button black">Speak it</button>
+              <pre id="code-display" class="code-preview">
+this.speechText("text", [0, 1, 0.8]);</pre
+              >
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="connect-container">
+            <div class="container-title">State</div>
+            <div id="state-display" class="state-display">initialisation</div>
+          </div>
+          <div class="connect-container">
+            <div class="container-title">Console Output</div>
+            <div id="console-output" class="console-container"></div>
+            <button id="clear-console" class="button black">
+              Clear Console
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="connect-container">
-        <div class="container-title">Your program</div>
-        <button id="restartbutton" class="button black">Start Machine</button>
+      <div class="credit-line">
+        ECAL M&ID 2025 - A. Bellet & M. Parisod –
+        <a href="https://github.com/ecal-mid/talk-to-me-2025" target="_blank"
+          >GitHub</a
+        >
       </div>
-      <div class="connect-container">
-        <div class="container-title">Simulate Buttons</div>
-        <button id="btn0" class="testbutton blue">0</button>
-        <button id="btn1" class="testbutton yellow">1</button>
-        <button id="btn2" class="testbutton black">2</button>
-        <button id="btn3" class="testbutton yellow">3</button>
-        <button id="btn4" class="testbutton green">4</button>
-        <button id="btn5" class="testbutton red">5</button>
-        <button id="btn6" class="testbutton blue">6</button>
-        <button id="btn7" class="testbutton black">7</button>
-        <button id="btn8" class="testbutton black">8</button>
-        <button id="btn9" class="testbutton black">9</button>
-      </div>
-      <div class="connect-container">
-        <div class="container-title">Test Buttons</div>
-        <button id="tester_btn_1" class="button tester black">
-          1. Turn all leds off
-        </button>
-        <button id="tester_btn_2" class="button tester black">
-          2. Turn all leds on red
-        </button>
-        <button id="tester_btn_3" class="button tester black">
-          3. Turn all leds on yellow blinking
-        </button>
-        <button id="tester_btn_4" class="button tester black">
-          4. Turn all leds on pink pulsing
-        </button>
-        <button id="tester_btn_5" class="button tester black">
-          5. First led RGB
-        </button>
-        <button id="tester_btn_6" class="button tester black">
-          6. Turn all leds on white
-        </button>
-      </div>
-      <div id="version">version: 0.0.2</div>
     </div>
   </body>
 </html>

@@ -1,5 +1,5 @@
 /*********************************************************************
-  TALK TO ME - ECAL 2023 - AB.
+  TALK TO ME - ECAL 2025 - AB.
   Serial communication via Web USB
   Some heplers functions for Buttons, Potentimeter, Leds
   All the logic is done on the Web side via javascript
@@ -90,7 +90,7 @@ void setup() {
 
   usb_web.setLandingPage(&landingPage);
   usb_web.setLineStateCallback(line_state_callback);
-  //usb_web.setStringDescriptor("TinyUSB WebUSB");
+  usb_web.setStringDescriptor("Pi Pico - WebUSB");
   usb_web.begin();
 
 
@@ -115,11 +115,12 @@ void echo_all(char chr) {
 }
 
 void setLedPixel(String command) {
-
+  //Serial.print("leds: ");
+  //Serial.println(command);
   if (command.substring(1, 2).equals("x")) {
     // turn all off command Lx000
     initAllLedsPixels();
-    Serial.println("all Leds Off");
+    //Serial.println("all Leds Off");
     return;
   }
 
@@ -140,7 +141,8 @@ void setLedPixel(String command) {
 
 // use for realtime setting of leds via hex rgb value
 void setLedPixelHEX(String command) {
-  
+  //Serial.print("leds RGB: ");
+  //Serial.println(command);
   int led_index = command.substring(1, 3).toInt();  // 0-99
   String color_code = command.substring(3, 9);      // Hex rgb value
   if (led_index >= NUMPIXELS) return;               // avoid offset
@@ -156,10 +158,10 @@ void setLedPixelHEX(String command) {
   pixels.show();
 }
 
-long hstol(String recv){
+long hstol(String recv) {
   char c[recv.length() + 1];
   recv.toCharArray(c, recv.length() + 1);
-  return strtol(c, NULL, 16); 
+  return strtol(c, NULL, 16);
 }
 
 void ledAnimationBlink() {
@@ -282,20 +284,20 @@ void loop() {
   }
 
 
-  // READ LDR value
-  if (previousMillis + 200 <= millis()) {  // check every x iterations
-    previousMillis = millis();
-    // READ ANALOG VALUE
-    analog_value = analogRead(analog_pin);
-    Serial.println(analog_value);
-    analog_value = map(analog_value, 350, 730, 0, 1);
+  // // READ LDR value
+  // if (previousMillis + 200 <= millis()) {  // check every x iterations
+  //   previousMillis = millis();
+  //   // READ ANALOG VALUE
+  //   analog_value = analogRead(analog_pin);
+  //   Serial.println(analog_value);
+  //   analog_value = map(analog_value, 350, 730, 0, 1);
 
-    if (analog_last_value != analog_value) {
-      analog_last_value = analog_value;
-      Serial.println(analog_value);
-      usb_web.println("A" + String(analog_value));
-    }
-  }
+  //   if (analog_last_value != analog_value) {
+  //     analog_last_value = analog_value;
+  //     Serial.println(analog_value);
+  //     usb_web.println("A" + String(analog_value));
+  //   }
+  // }
 
   // READ BUTTONS STATES
   for (int i = 0; i < nr_of_pins; i++) {

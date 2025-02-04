@@ -1,168 +1,73 @@
-import TalkMachine from './TalkMachine.js';
+import TalkMachine from './core/TalkMachine.js';
 
 export default class DialogMachine extends TalkMachine {
   constructor() {
     super();
+    this.initDialogMachine();
+  }
 
-    this.machineStarted = true;
-    this.isSpeaking = false;
+  initDialogMachine() {
+    this.dialogStarted = false;
     this.lastState = '';
     this.nextState = '';
     this.waitingForUserInput = true;
-    this.machineStarted = false;
-    this.rgb = [0, 0, 0];
-    this.init();
+    this.buttonPressCounter = 0;
+    this.preset_voice_1 = [0, 1, 0.8];
+    this.stateDisplay = document.querySelector('#state-display');
+    this.shouldContinue = false;
+
+    // initialize dialog machine elements
+    this.maxLeds = 10;
+    this.ui.initLEDUI();
   }
 
-  init() {
-    // EVENT HANDLERS
-    this.restartButton.addEventListener(
-      'click',
-      this.handleRestartButton.bind(this)
-    );
-    document.addEventListener(
-      'TextToSpeechEnded',
-      this.handleTextToSpeechEnded.bind(this)
-    );
-    document.addEventListener('audioEnded', this.handleAudioEnded.bind(this));
-    // SOUNDS
-    this.sound_error = new Audio('audio/error_buzzer.wav');
-  }
-
-  /* ----- EVENT HANDLERS ------- */
-
-  handleRestartButton() {
-    console.clear();
-    this.start(); // restart the dialog
-  }
-
-  handleTesterButtons(button) {
-    switch (button) {
-      case 1:
-        this.ledsAllOff();
-        break;
-      case 2:
-        this.ledsAllChangeColor('blue');
-        break;
-      case 3:
-        this.ledsAllChangeColor('yellow', 1);
-        break;
-      case 4:
-        this.ledsAllChangeColor('pink', 2);
-        break;
-      case 5:
-        this.ledChangeRGB(0, 0, 255, 0);
-        this.ledChangeRGB(1, 0, 0, 255);
-        this.ledChangeRGB(2, 255, 0, 0);
-        break;
-      case 6:
-        //this.ledsAllChangeColor('red');
-        setInterval(this.ledLoop.bind(this), 100);
-        break;
-
-      default:
-        this.fancyLogger.logWarning('no action defined for button ' + button);
-    }
-  }
-
-  handleButtonPressed(button) {
-    console.log('button Pressed');
-    // called when a button is pressed (arduino or simulator)
-  }
-
-  handleButtonReleased(button) {
-    // called when a button is released (arduino or simulator)
-    console.log('button released');
-    if (this.waitingForUserInput == true) {
-      this.dialogFlow('released', button);
-    }
-  }
-
-  handleTextToSpeechEnded() {
-    // called when the spoken text is finished
-    this.isSpeaking = false;
-  }
-
-  handleAudioEnded() {
-    // called when the playing audio is finished
-    console.log('audio ended');
-  }
-
-  handleUserInputError() {
-    this.fancyLogger.logWarning('user input is not allowed at this time');
-    this.audioMachine.playSound(this.sound_error);
-  }
-
-  // Voice presets
-  preset_voice_1 = [1, 1, 0.8]; //preset for a voice, voice index, pitch, rate
-
-  start() {
-    console.clear();
+  /* DIALOG CONTROL */
+  startDialog() {
+    this.dialogStarted = true;
     this.waitingForUserInput = true;
-    this.machineStarted = true;
     this.nextState = 'initialisation';
     this.buttonPressCounter = 0;
-    this.fancyLogger.logMessage('Machine started');
-    this.dialogFlow(); // start the machine with first state
-  }
-
-  goToNextState() {
+    // Voice presets [voice index, pitch, rate]
+    this.preset_voice_1 = [1, 1, 0.8];
+    // turn off all simulated LEDs
+    this.ledsAllOff();
+    // clear console
+    this.fancyLogger.clearConsole();
+    // start the machine with first state
     this.dialogFlow();
   }
 
-  ledLoop() {
-    const val = this.rgb[0];
-    if (val < 250) {
-      this.rgb[0] = this.rgb[1] = this.rgb[2] = val + 1;
-    } else {
-      this.rgb[0] = this.rgb[1] = this.rgb[2] = 0;
-    }
-    for (let i = 0; i < 20; i++) {
-      this.ledChangeRGB(i, this.rgb[0], this.rgb[1], this.rgb[2]);
-    }
-  }
-
+  /* DIALOG FLOW */
+  /**
+   * Main dialog flow function
+   * @param {string} eventType - Type of event ('default', 'pressed', 'released', 'longpress')
+   * @param {number} button - Button number (0-9)
+   * @private
+   */
   dialogFlow(eventType = 'default', button = -1) {
-    /**** first test before continuing to rules ****/
-    if (this.waitingForUserInput === false) {
-      this.handleUserInputError();
+    if (!this.performPreliminaryTests()) {
+      // first tests before continuing to rules
       return;
     }
+    this.stateUpdate();
 
-    if (this.machineStarted === false) {
-      this.fancyLogger.logWarning(
-        'Machine is not started yet, press Start Machine'
-      );
-      return;
-    }
+    /**
+     * States and Rules
+     * Edit the dialog here to add new dialog options
+     * ****/
 
-    if (this.nextState !== this.lastState) {
-      this.fancyLogger.logState(`entering State: ${this.nextState}`);
-    } else {
-      this.fancyLogger.logState(`staying in State: ${this.nextState}`);
-    }
-
-    if (this.speakMachine.isSpeaking === true) {
-      this.fancyLogger.logWarning(
-        'Im speaking, please wait until I am finished'
-      );
-      return;
-    }
-    this.lastState = this.nextState;
-
-    /**** States and Rules ****/
     switch (this.nextState) {
       case 'initialisation':
-        this.fancyLogger.logMessage('Machine is initialised and ready');
-        this.fancyLogger.logMessage('Press any button to continue');
         this.ledsAllOff();
         this.nextState = 'welcome';
+        this.fancyLogger.logMessage('initialisation done');
         this.goToNextState();
         break;
 
       case 'welcome':
+        this.ledsAllChangeColor('white', 1);
         this.fancyLogger.logMessage(
-          'Welcome, you got two buttons, use one of them'
+          'Welcome, you have got 2 buttons, press one of them'
         );
         this.nextState = 'choose-color';
         break;
@@ -178,55 +83,50 @@ export default class DialogMachine extends TalkMachine {
           this.nextState = 'choose-yellow';
           this.goToNextState();
         }
+        this.ledsAllChangeColor('green', 1);
         break;
 
       case 'choose-blue':
-        this.fancyLogger.logMessage('Blue was a good choice');
-        this.fancyLogger.logMessage('Press any button to continue');
+        this.fancyLogger.logMessage(
+          'blue was a good choice, press any button to continue'
+        );
         this.nextState = 'can-speak';
         break;
 
       case 'choose-yellow':
-        this.fancyLogger.logMessage('Yellow was a bad choice');
-        this.fancyLogger.logMessage('Press blue to continue');
+        this.fancyLogger.logMessage(
+          'yellow was a bad choice, press blue button to continue'
+        );
         this.nextState = 'choose-color';
         this.goToNextState();
         break;
 
       case 'can-speak':
-        this.speakMachine.speakText(
-          'I can speak, i can count. Press a button.',
-          this.preset_voice_1
-        );
+        this.speak('I can speak, i can count. Press a button.');
         this.nextState = 'count-press';
         break;
 
       case 'count-press':
         this.buttonPressCounter++;
-        this.speakMachine.speakText(
-          'you pressed ' + this.buttonPressCounter + ' time',
-          this.preset_voice_1
-        );
 
-        if (this.buttonPressCounter > 2) {
+        if (this.buttonPressCounter > 3) {
           this.nextState = 'toomuch';
           this.goToNextState();
+        } else {
+          this.speechText(
+            'you pressed ' + this.buttonPressCounter + ' time',
+            [0, 0.8, 1]
+          );
         }
         break;
 
       case 'toomuch':
-        this.speakMachine.speakText(
-          'You are pressing too much! I Feel very pressed',
-          this.preset_voice_1
-        );
+        this.speak('You are pressing too much! I Feel very pressed');
         this.nextState = 'enough-pressed';
         break;
 
       case 'enough-pressed':
-        this.speakMachine.speakText(
-          'Enough is enough! I dont want to be pressed anymore!',
-          this.preset_voice_1
-        );
+        this.speak('Enough is enough! I dont want to be pressed anymore!');
         break;
 
       default:
@@ -235,8 +135,157 @@ export default class DialogMachine extends TalkMachine {
         );
     }
   }
+
+  /**
+   *  short hand function to speak a text with the preset voice
+   *  @param {string} _text the text to speak
+   */
+  speak(_text) {
+    // called to speak a text
+    this.speechText(_text, this.preset_voice_1);
+  }
+
+  /**
+   *  short hand function to force transition to the next state in the dialog flow
+   *  @param {number} delay - the optional delay in milliseconds
+   * @private
+   */
+  goToNextState(delay = 0) {
+    if (delay > 0) {
+      setTimeout(() => {
+        this.dialogFlow();
+      }, delay);
+    } else {
+      this.dialogFlow();
+    }
+  }
+
+  /**
+   * Perform preliminary tests before continuing with dialog flow
+   * @returns {boolean} true if all tests pass, false otherwise
+   * @private
+   */
+  performPreliminaryTests() {
+    if (this.dialogStarted === false) {
+      this.fancyLogger.logWarning('not started yet, press Start Machine');
+      return false;
+    }
+    if (this.waitingForUserInput === false) {
+      this._handleUserInputError();
+      return false;
+    }
+    // check if no speak is active
+    if (this.speechIsSpeaking === true) {
+      this.fancyLogger.logWarning(
+        'im speaking, please wait until i am finished'
+      );
+      return false;
+    }
+    if (this.nextState == '') {
+      this.fancyLogger.logWarning('nextState is empty');
+      return false;
+    }
+
+    return true;
+  }
+
+  stateUpdate() {
+    this.lastState = this.nextState;
+    // Update state display
+    if (this.stateDisplay) {
+      this.stateDisplay.textContent = this.nextState;
+    }
+  }
+
+  /**
+   * Override _handleButtonPressed from TalkMachine
+   * @override
+   * @protected
+   */
+  _handleButtonPressed(button, simulated = false) {
+    if (this.waitingForUserInput) {
+      // this.dialogFlow('pressed', button);
+    }
+  }
+
+  /**
+   * Override _handleButtonReleased from TalkMachine
+   * @override
+   * @protected
+   */
+  _handleButtonReleased(button, simulated = false) {
+    if (this.waitingForUserInput) {
+      this.dialogFlow('released', button);
+    }
+  }
+
+  /**
+   * Override _handleButtonLongPressed from TalkMachine
+   * @override
+   * @protected
+   */
+  _handleButtonLongPressed(button, simulated = false) {
+    if (this.waitingForUserInput) {
+      //this.dialogFlow('longpress', button);
+    }
+  }
+
+  /**
+   * Override _handleTextToSpeechEnded from TalkMachine
+   * @override
+   * @protected
+   */
+  _handleTextToSpeechEnded() {
+    this.fancyLogger.logSpeech('speech ended');
+    if (this.shouldContinue) {
+      // go to next state after speech ended
+      this.shouldContinue = false;
+      this.goToNextState();
+    }
+  }
+
+  /**
+   * Handle user input error
+   * @protected
+   */
+  _handleUserInputError() {
+    this.fancyLogger.logWarning('user input is not allowed at this time');
+  }
+
+  /**
+   * Handle tester button clicks
+   * @param {number} button - Button number
+   * @override
+   * @protected
+   */
+  _handleTesterButtons(button) {
+    switch (button) {
+      case 1:
+        this.ledsAllOff();
+        break;
+      case 2:
+        this.ledsAllChangeColor('yellow');
+        break;
+      case 3:
+        this.ledsAllChangeColor('green', 1);
+        break;
+      case 4:
+        this.ledsAllChangeColor('pink', 2);
+        break;
+      case 5:
+        this.ledChangeRGB(0, 255, 100, 100);
+        this.ledChangeRGB(1, 0, 100, 170);
+        this.ledChangeRGB(2, 0, 0, 170);
+        this.ledChangeRGB(3, 150, 170, 70);
+        this.ledChangeRGB(4, 200, 160, 0);
+        break;
+
+      default:
+        this.fancyLogger.logWarning('no action defined for button ' + button);
+    }
+  }
 }
 
-window.onload = () => {
+window.addEventListener('DOMContentLoaded', () => {
   const dialogMachine = new DialogMachine();
-};
+});
