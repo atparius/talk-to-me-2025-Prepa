@@ -1,4 +1,4 @@
-import TalkMachine from './core/TalkMachine.js';
+import TalkMachine from '../talk-to-me-core/js/TalkMachine.js';
 
 export default class DialogMachine extends TalkMachine {
   constructor() {
