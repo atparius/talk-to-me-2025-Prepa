@@ -261,18 +261,15 @@ export default class DialogMachine extends TalkMachine {
   _handleTesterButtons(button) {
     switch (button) {
       case 1:
-        this.ledsAllOff();
-        break;
-      case 2:
         this.ledsAllChangeColor('yellow');
         break;
-      case 3:
+      case 2:
         this.ledsAllChangeColor('green', 1);
         break;
-      case 4:
+      case 3:
         this.ledsAllChangeColor('pink', 2);
         break;
-      case 5:
+      case 4:
         this.ledChangeRGB(0, 255, 100, 100);
         this.ledChangeRGB(1, 0, 100, 170);
         this.ledChangeRGB(2, 0, 0, 170);
