@@ -17,9 +17,8 @@ export default class DialogMachine extends TalkMachine {
 		this.shouldContinue = false;
 
 		// initialize dialog machine elements
-		this.maxLeds = 60;
+		this.maxLeds = 10;
 		this.ui.initLEDUI();
-		this.tilted = false;
 	}
 
 	/* DIALOG CONTROL */
@@ -67,10 +66,13 @@ export default class DialogMachine extends TalkMachine {
 				break;
 
 			case "welcome":
-				// this.ledsAllChangeRGB(255, 255, 0);
-				this.ledChangeRGB(45, 255, 0, 0);
-				// this.ledChangeRGB(11, 0, 0, 255);
 				this.fancyLogger.logMessage("Welcome to the Dialog Machine");
+				this.speechText("AAA BBB ! EEE", [0, 1, 1]);
+
+				// this.speechText("AAAAAAH", [8, 1, 0.8]);
+				// this.speechText("eeeeeee", [8, 0.2, 1]);
+				// this.speechText("OOOOOoooo", [8, 1, 1]);
+				this.nextState = "next";
 
 				break;
 
@@ -157,25 +159,6 @@ export default class DialogMachine extends TalkMachine {
 		}
 	}
 
-	// this.tilted = false;
-
-	checkTilt(button) {
-		if (button == 0) {
-			if (!this.tilted) {
-				this.tilted = true;
-				this.fancyLogger.logWarning("Tilted");
-			}
-			this.ledsAllChangeColor("red");
-		}
-		if (button == 1) {
-			if (this.tilted) {
-				this.tilted = false;
-				this.fancyLogger.logWarning("Not Tilted");
-			}
-			this.ledsAllChangeColor("green");
-		}
-	}
-
 	/**
 	 * Perform preliminary tests before continuing with dialog flow
 	 * @returns {boolean} true if all tests pass, false otherwise
@@ -229,10 +212,7 @@ export default class DialogMachine extends TalkMachine {
 	 */
 	_handleButtonReleased(button, simulated = false) {
 		if (this.waitingForUserInput) {
-			// this.dialogFlow("released", button);
-		}
-		if (button == 0 || button == 1) {
-			this.checkTilt(button);
+			this.dialogFlow("released", button);
 		}
 	}
 
@@ -241,7 +221,6 @@ export default class DialogMachine extends TalkMachine {
 	 * @override
 	 * @protected
 	 */
-
 	_handleButtonLongPressed(button, simulated = false) {
 		if (this.waitingForUserInput) {
 			//this.dialogFlow('longpress', button);
